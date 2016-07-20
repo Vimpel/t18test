@@ -23,29 +23,43 @@ class T18Test extends Module {
 
         if (!Configuration::get('t18test'))      
           $this->warning = $this->l('No name provided');
+        
     }
   
     public function install() {
+        $this->initAdminMenuItem ('add', 'AdminT18TestController', $this->displayName);
         if (!parent::install())
           return false;
         return true;
     }
     
     public function unistall() {
+        $this->initAdminMenuItem('delete','AdminT18TestController');
         if (!parent::uninstall())
         return false;
         return true;
     }
-    protected function installController($controllerName, $name) {
-        $tab_admin_order_id = Tab::getIdFromClassName('AdminTools');
-        $tab = new Tab();
-        $tab->class_name = $controllerName;
-        $tab->id_parent = $tab_admin_order_id;
-        $tab->module = $this->name;
-        $languages = Language::getLanguages(false);
-        foreach($languages as $lang){
-            $tab->name[$lang['id_lang']] = $name;
+    protected function initAdminMenuItem($action, $controllerName, $name) {
+        if (empty($controllerName)) 
+            return false;
+        if (empty($name))
+            $name = $this->displayName;
+        switch ($action) {
+            case 'add':
+            default:
+                $tab_admin_order_id = Tab::getIdFromClassName('AdminTools');
+                $tab = new Tab();
+                $tab->class_name = $controllerName;
+                $tab->id_parent = $tab_admin_order_id;
+                $tab->module = $this->name;
+                $tab->name = $name;
+                $tab->save();
+                break;
+            case 'delete':
+                $tab_controller_main_id = TabCore::getIdFromClassName($controllerName);
+		$tab_controller_main = new Tab($tab_controller_main_id);
+		$tab_controller_main->delete();
+                break;
         }
-    	$tab->save();
     }
 }
